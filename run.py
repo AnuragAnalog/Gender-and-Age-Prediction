@@ -20,11 +20,14 @@ def create_model():
 
     return model
 
-def load_model():
-    pass
+def load_model(model, fname):
+    model.load_model(fname)
 
-def main():
+    return model
+
+def main(model):
     cam = cv2.VideoCapture(0)
+    clf = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
     if not cam.isOpened():
         print("Cannot open camera exiting......")
@@ -36,6 +39,13 @@ def main():
         if not ret:
             print("Can't receive frame. Exiting ...")
             break
+
+        faces = clf.detectMultiScale(frame)
+
+        for face in faces:
+            (x, y, w, h) = [v for v in face]
+
+        img_resized = cv2.resize(frame)
 
         cv2.imshow('Main Window', frame)
 
