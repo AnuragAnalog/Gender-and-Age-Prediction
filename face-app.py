@@ -1,12 +1,18 @@
 #!/usr/bin/python3
 
-from flask import Flask
+import flask
+from flask import request, render_template
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
+app.config['DEBUG'] = True
 
 @app.route('/')
-def hello():
-    return "Hello World!"
+def index():
+    return render_template('index.html')
+
+@app.route('/predict')
+def predict():
+    return render_template('predict.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
