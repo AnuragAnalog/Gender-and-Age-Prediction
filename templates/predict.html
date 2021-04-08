@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html>
-    <h1>
+    <h1 align="center">
         Prediction Page
     </h1>
+
+    <div class="video">
+        <img src="{{ url_for('video_feed') }}">
+    </div>
 </html>
+
+<style>
+    .video {
+        left: 25%;
+        top: 25%;
+        height: 50%;
+        width: 50%;
+        position: absolute;
+        border: 3px solid black;
+        border-radius: 5px;
+    }
+</style>
