@@ -12,12 +12,17 @@ def create_model():
     input_layer = tf.keras.layers.Input(shape=input_shape)
     pretrained = tf.keras.applications.vgg16.VGG16(include_top=False, weights=None, input_tensor=input_layer)
 
-    flatten = tf.keras.layers.Flatten()(pretrained.output)
-    dense = tf.keras.layers.Dense(128, activation='relu')(flatten)
-    dense = tf.keras.layers.Dense(64, activation='relu')(dense)
-    dense = tf.keras.layers.Dense(2)(dense)
+    flatten1 = tf.keras.layers.Flatten()(pretrained.output)
+    dense1 = tf.keras.layers.Dense(128, activation='relu')(flatten1)
+    dense1 = tf.keras.layers.Dense(64, activation='relu')(dense1)
+    dense1 = tf.keras.layers.Dense(1, name='age_output')(dense1)
 
-    model = tf.keras.models.Model(inputs=pretrained.input, outputs=dense)
+    flatten2 = tf.keras.layers.Flatten()(pretrained.output)
+    dense2 = tf.keras.layers.Dense(128, activation='relu')(flatten2)
+    dense2 = tf.keras.layers.Dense(64, activation='relu')(dense2)
+    dense2 = tf.keras.layers.Dense(1, activation='sigmoid', name='gender_output')(dense2)
+
+    model = tf.keras.models.Model(inputs=pretrained.input, outputs=[dense1, dense2])
 
     return model
 
@@ -35,9 +40,9 @@ def main(loaded_model):
         sys.exit()
 
     while True:
-        ret, frame = cam.read()
+        success, frame = cam.read()
 
-        if not ret:
+        if not success:
             print("Can't receive frame. Exiting ...")
             break
 
