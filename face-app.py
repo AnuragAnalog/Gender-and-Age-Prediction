@@ -10,6 +10,8 @@ from flask import request, render_template, Response
 app = flask.Flask(__name__)
 app.config['DEBUG'] = True
 
+age_labels = {0: 'Male', 1: 'Female'}
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -51,7 +53,8 @@ def gen_video(loaded_model, cam):
  
             result = loaded_model.predict(np.expand_dims(face_img, axis=0))
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0))
-            cv2.putText(frame, str(result), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            label = f'Age is {np.squeeze(result[0]).round()} and Gender is {age_labels[np.squeeze(result[1]).round()]}'
+            cv2.putText(frame, str(label), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
         _, jpeg = cv2.imencode('.jpg', frame)
         frame = jpeg.tobytes()
