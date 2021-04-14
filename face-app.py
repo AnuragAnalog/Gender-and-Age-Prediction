@@ -10,6 +10,7 @@ from flask import request, render_template, Response
 app = flask.Flask(__name__)
 app.config['DEBUG'] = True
 
+model_dir = './models/'
 age_labels = {0: 'Male', 1: 'Female'}
 
 @app.route('/')
@@ -23,9 +24,11 @@ def predict():
 @app.route('/video_feed')
 def video_feed():
     video = cv2.VideoCapture(0)
+
+    model_arch = 'vgg16'
  
-    model = create_model()
-    loaded_model = load_model(model, 'model_weights.hdf5')
+    model = create_model(model_arch)
+    loaded_model = load_model(model, model_dir+f'model_weights_{model_arch}.hdf5')
  
     return Response(gen_video(loaded_model, video), mimetype="multipart/x-mixed-replace; boundary=frame")
 
@@ -62,23 +65,8 @@ def gen_video(loaded_model, cam):
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
-def create_model():
-    input_shape = (48, 48, 3)
-
-    input_layer = tf.keras.layers.Input(shape=input_shape)
-    pretrained = tf.keras.applications.vgg16.VGG16(include_top=False, weights=None, input_tensor=input_layer)
-
-    flatten1 = tf.keras.layers.Flatten()(pretrained.output)
-    dense1 = tf.keras.layers.Dense(128, activation='relu')(flatten1)
-    dense1 = tf.keras.layers.Dense(64, activation='relu')(dense1)
-    dense1 = tf.keras.layers.Dense(1, name='age_output')(dense1)
-
-    flatten2 = tf.keras.layers.Flatten()(pretrained.output)
-    dense2 = tf.keras.layers.Dense(128, activation='relu')(flatten2)
-    dense2 = tf.keras.layers.Dense(64, activation='relu')(dense2)
-    dense2 = tf.keras.layers.Dense(1, activation='sigmoid', name='gender_output')(dense2)
-
-    model = tf.keras.models.Model(inputs=pretrained.input, outputs=[dense1, dense2])
+def create_model(model_arch):
+    model = tf.keras.models.load_model(model_dir+f'model_{model_arch}.keras')
 
     return model
 

@@ -6,23 +6,8 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-def create_model():
-    input_shape = (48, 48, 3)
-
-    input_layer = tf.keras.layers.Input(shape=input_shape)
-    pretrained = tf.keras.applications.vgg16.VGG16(include_top=False, weights=None, input_tensor=input_layer)
-
-    flatten1 = tf.keras.layers.Flatten()(pretrained.output)
-    dense1 = tf.keras.layers.Dense(128, activation='relu')(flatten1)
-    dense1 = tf.keras.layers.Dense(64, activation='relu')(dense1)
-    dense1 = tf.keras.layers.Dense(1, name='age_output')(dense1)
-
-    flatten2 = tf.keras.layers.Flatten()(pretrained.output)
-    dense2 = tf.keras.layers.Dense(128, activation='relu')(flatten2)
-    dense2 = tf.keras.layers.Dense(64, activation='relu')(dense2)
-    dense2 = tf.keras.layers.Dense(1, activation='sigmoid', name='gender_output')(dense2)
-
-    model = tf.keras.models.Model(inputs=pretrained.input, outputs=[dense1, dense2])
+def create_model(model_arch):
+    model = tf.keras.models.load_model(model_arch)
 
     return model
 
@@ -55,9 +40,12 @@ def main(loaded_model):
             face_img = cv2.resize(face_img, (48, 48)) / 255.
 
             result = loaded_model.predict(np.expand_dims(face_img, axis=0))
+
+            age = np.squeeze(result[0]).round()
+            gender = "Male" if np.squeeze(result[1]).round() == 0 else "Female"
+
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0))
-            cv2.rectangle(frame, (x, y-40), (x+w, y), (0, 255, 0))
-            cv2.putText(frame, str(result), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+            cv2.putText(frame, f'Your {age} years old and {gender}', (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
         cv2.imshow('Press \'q\' to close..', frame)
 
@@ -70,6 +58,17 @@ def main(loaded_model):
     return
 
 if __name__ == '__main__':
-    model = create_model()
-    loaded_model = load_model(model, 'model_weights.hdf5')
+    if len(sys.argv) == 1:
+        model_name = 'vgg16'
+    else:
+        if sys.argv[1] in ['vgg16', 'vgg19']:
+            model_name = sys.argv[1]
+        else:
+            raise ValueError("Invalid Model Name, defined models are vgg{16, 19}")
+
+    model_dir = './models/'
+
+    model = create_model(model_dir+f'model_{model_name}.keras')
+    loaded_model = load_model(model, model_dir+f'model_weights_{model_name}.hdf5')
+
     main(loaded_model)
